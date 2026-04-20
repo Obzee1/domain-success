@@ -1,0 +1,3 @@
+[build]
+builder = "node"
+path = "domain-success"
